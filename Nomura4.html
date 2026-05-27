@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nomura Wealth – Mobile Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: #1a1a1a;
+    display: flex;
+    font-family: 'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Page Layout ── */
+  .sidebar {
+    width: 280px;
+    background: #222;
+    border-right: 1px solid #333;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .phone-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  /* ── Sidebar Elements ── */
+  .sidebar h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .sidebar p.sub { font-size: 12px; color: #888; }
+  .sidebar-section label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #666; display: block; margin-bottom: 10px; font-weight: 700; }
+  .language-select { width: 100%; background: #111; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; }
+  .feature-nav { list-style: none; }
+  .feature-nav li { margin-bottom: 6px; }
+  .feature-nav button { width: 100%; text-align: left; background: transparent; border: none; color: #ccc; padding: 10px 14px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+  .feature-nav button:hover { background: #333; color: #fff; }
+
+  /* ── Phone Shell ── */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    border-radius: 48px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 10px #2a2a2a, 0 0 0 12px #444;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .phone::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px; background: #2a2a2a; border-radius: 0 0 22px 22px; z-index: 100;
+  }
+
+  /* ── Screens ── */
+  .screen {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+    transform: translateX(30px); overflow: hidden; background: var(--page-bg, #F5F5F7);
+  }
+  .screen.active { opacity: 1; pointer-events: auto; transform: translateX(0); }
+  .screen.slide-back { transform: translateX(-30px); }
+
+  /* ── Colors ── */
+  :root {
+    /* Legacy App Colors */
+    --red: #C8102E;
+    --red-dark: #9B0E24;
+    --red-light: #F5E6E8;
+    --gray-bg: #F5F5F7;
+    --gray-border: #E0E0E0;
+    --text-mid: #555;
+    --text-light: #888;
+    --green: #00875A;
+    --orange: #E67700;
+    --blue: #1C5FBC;
+    --purple: #7B2D8B;
+    
+    /* New Dashboard & Login Colors */
+    --nomura-deep:   #8C0018;
+    --nomura-red:    #D81032;
+    --nomura-mid:    #B5001F;
+    --nomura-bright: #FF2A47;
+    --nomura-blush:  #FCEAED;
+    --text:          #061223;
+    --support:       #3A495D;
+    --muted:         #A1A8B2;
+    --success:       #0E813E;
+    --danger:        #BF2310;
+    --surface:       #FFFFFF;
+    --page-bg:       #F4F6F9;
+    --shadow:        0 4px 9px rgba(16,47,67,0.12);  
+  }
+
+  /* ── Legacy Components (used by inner screens) ── */
+  .status-bar { height: 44px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 24px 8px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .status-bar.red { background: var(--nomura-deep); color: #fff; }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 14px; height: 14px; fill: currentColor; }
+  .scroll-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .scroll-body::-webkit-scrollbar { display: none; }
+  .back-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--nomura-red); color: #fff; flex-shrink: 0; }
+  .back-btn { width: 32px; height: 32px; border: none; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .back-btn svg { width: 16px; height: 16px; fill: #fff; }
+  .back-title { font-size: 16px; font-weight: 600; }
+  .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+  /* ── Login Screen ── */
+  .header { background: var(--nomura-red); flex: 1; position: relative; overflow: hidden; padding: 22px 24px 36px; display: flex; flex-direction: column; justify-content: space-between; }
+  .geo-bg { position: absolute; inset: 0; pointer-events: none; }
+  .geo { position: absolute; inset: 0; }
+  .geo-1 { background: rgba(0,0,0,0.30); clip-path: polygon(0 0, 44% 0, 18% 100%, 0 100%); }
+  .geo-2 { background: rgba(0,0,0,0.18); clip-path: polygon(24% 0, 70% 0, 44% 100%, -2% 100%); }
+  .geo-3 { background: rgba(255,255,255,0.07); clip-path: polygon(52% 0, 100% 0, 100% 100%, 26% 100%); }
+  .header-top { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .nomura-logo-img { display: block; height: 90px; width: auto; mix-blend-mode: screen; }
+  .header-eyebrow { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.7); letter-spacing: 1.5px; text-transform: uppercase; }
+  .header-bottom { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; }
+  .header-greeting { font-size: 30px; font-weight: 700; color: #fff; line-height: 1.15; letter-spacing: -0.5px; }
+  .header-switch { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.65); }
+  .header-switch a { color: rgba(255,255,255,0.9); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .gradient-bar { height: 4px; flex-shrink: 0; background: linear-gradient(90deg, var(--nomura-deep), var(--nomura-mid), var(--nomura-bright)); }
+  .login-cards-body { flex-shrink: 0; background: #F7F7F7; padding: 28px 20px 40px; display: flex; flex-direction: column; gap: 16px; }
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: #6B7280; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .login-card-btn { background: #fff; border: 1.5px solid #E2E4E8; border-radius: 18px; padding: 22px 18px; height: 170px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; width: 100%; cursor: pointer; transition: all 0.15s; text-align: left; }
+  .login-card-btn:active { transform: scale(0.97); }
+  .card-primary { background: var(--nomura-red); border-color: var(--nomura-red); }
+  .card-icon-wrap { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(216,16,50,0.1); flex-shrink: 0; }
+  .card-primary .card-icon-wrap { background: rgba(255,255,255,0.18); }
+  .card-icon { width: 24px; height: 24px; }
+  .card-label { font-size: 14px; font-weight: 700; color: #1A1A1A; margin-bottom: 2px; }
+  .card-primary .card-label { color: #fff; }
+  .card-sub { font-size: 12px; color: #6B7280; }
+  .card-primary .card-sub { color: rgba(255,255,255,0.7); }
+
+  /* ── New Dashboard Layout ── */
+  .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .scroll-area::-webkit-scrollbar { display: none; }
+  .tab-header { background: var(--nomura-red); flex-shrink: 0; position: sticky; top: 0; z-index: 20; overflow: hidden; }
+  .toolbar { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; position: relative; z-index: 1; }
+  .toolbar-leading { display: flex; gap: 12px; align-items: center; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: #3A495D; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; }
+  .user-name { font-size: 16px; font-weight: 600; color: white; }
+  .user-role { font-size: 13px; color: rgba(255,255,255,0.70); }
+  .toolbar-trailing { display: flex; align-items: center; gap: 8px; }
+  .notif-wrap { position: relative; width: 32px; height: 44px; display:flex; align-items:center; justify-content:center; cursor: pointer; }
+  .notif-dot { width: 8px; height: 8px; background: white; border-radius: 50%; position: absolute; top: 8px; right: 2px; border: 1.5px solid var(--nomura-red); }
+  .contact-text { font-size: 15px; font-weight: 600; color: white; cursor: pointer; }
+  
+  .tabs { display: flex; gap: 12px; padding: 10px 16px 14px; overflow-x: auto; scrollbar-width: none; position: relative; z-index: 1; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 5px 10px; border-radius: 8px; font-size: 15px; white-space: nowrap; cursor: pointer; color: rgba(255,255,255,0.80); background: transparent; border: none; font-family: inherit; }
+  .tab.active { background: white; color: var(--nomura-red); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+  .content-bg-top { background: var(--page-bg); }
+  .content { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* Dashboard Cards */
+  .card-dark { background: #061223; color: white; }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-title { font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
+  .card-title-light { color: white; }
+  .card-action { font-size: 15px; font-weight: 600; color: var(--nomura-red); white-space: nowrap; cursor: pointer; }
+  .balance-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .flag { width: 28px; height: 20px; border-radius: 2px; overflow: hidden; flex-shrink: 0; position: relative; }
+  .flag::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(180deg,#B22234 0,#B22234 1.54px,white 1.54px,white 3.07px); }
+  .flag::after { content:''; position:absolute; top:0; left:0; width:11.2px; height:10.8px; background:#3C3B6E; }
+  .balance-value { font-size: 22px; font-weight: 600; color: var(--text); }
+  .balance-delta { display: flex; gap: 4px; margin-top: 4px; }
+  .positive { font-size: 13px; font-weight: 600; color: var(--success); }
+  .delta-label { font-size: 13px; color: var(--support); }
+  .nw-header { display: flex; align-items: center; justify-content: space-between; }
+  .nw-total { font-size: 15px; font-weight: 600; color: var(--text); }
+  .nw-rows { margin-top: 4px; }
+  .nw-row { display: flex; justify-content: space-between; height: 22px; align-items: center; }
+  .nw-label { font-size: 15px; color: var(--text); }
+  .nw-value { font-size: 13px; font-weight: 600; color: var(--text); }
+  .seg-ctrl { display: flex; background: rgba(120,120,128,0.12); border-radius: 10px; padding: 2px; height: 32px; margin-top: 16px; }
+  .seg { flex: 1; border-radius: 8px; font-size: 13px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; border: none; background: transparent; font-family: inherit; color: black; }
+  .seg.active { background: white; border: 0.5px solid rgba(60,60,67,0.36); box-shadow: 0 3px 4px rgba(0,0,0,0.12); font-weight: 600; }
+  .bar-chart { height: 12px; border-radius: 2px; display: flex; overflow: hidden; margin-top: 16px; }
+  .legend { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+  .legend-row { display: flex; align-items: center; justify-content: space-between; }
+  .legend-label { display: flex; align-items: center; gap: 8px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .legend-text { font-size: 13px; color: var(--support); }
+  .legend-value { font-size: 13px; font-weight: 600; color: var(--text); }
+  .quick-actions { display: flex; gap: 16px; justify-content: center; }
+  .action-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; }
+  .action-circle { width: 56px; height: 56px; background: var(--nomura-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .action-label { font-size: 15px; font-weight: 600; color: var(--nomura-red); text-align: center; font-family: inherit; }
+  .chart-outer { position: relative; height: 252px; margin-top: 16px; }
+  .chart-grid { position: absolute; inset: 0 0 40px 0; display: flex; flex-direction: column; justify-content: space-between; }
+  .grid-line { width: 100%; height: 1px; background: rgba(255,255,255,0.08); }
+  .chart-svg-area { position: absolute; left: 0; right: 0; bottom: 40px; height: 180px; }
+  .x-axis { position: absolute; bottom: 0; left: 0; right: 0; height: 36px; display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 4px; }
+  .x-label { font-size: 11px; color: var(--muted); }
+  .period-row { display: flex; justify-content: space-between; margin-top: 12px; }
+  .period-btn { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; color: white; background: none; border: none; cursor: pointer; font-family: inherit; }
+  .period-btn.active { background: var(--nomura-red); }
+
+  /* Dashboard Portfolios & Picks */
+  .select-field { display: flex; align-items: center; border: 1px solid #7189A7; border-radius: 8px; height: 56px; padding: 0 0 0 16px; margin-top: 8px; cursor: pointer; background: white; }
+  .select-label { font-size: 17px; color: var(--support); flex: 1; }
+  .select-arrow-box { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .portfolio-item { padding: 16px 0; border-bottom: 1px solid rgba(204,213,223,0.5); cursor: pointer; }
+  .portfolio-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .portfolio-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .portfolio-leading { display: flex; gap: 8px; align-items: center; flex: 1; min-width: 0; overflow: hidden; }
+  .portfolio-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .portfolio-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .portfolio-type { font-size: 12px; color: var(--support); }
+  .portfolio-amount-col { text-align: right; flex-shrink: 0; }
+  .portfolio-amount { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; line-height: 1.2; }
+  .portfolio-manager { font-size: 11px; color: var(--support); white-space: nowrap; line-height: 1.2; margin-top: 1px; }
+  .portfolio-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .mini-chart { flex: 0 0 54%; height: 45px; }
+  .delta-col { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+  .delta-pos { font-size: 12px; font-weight: 600; color: var(--success); line-height: 1.3; }
+
+  .picks-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 4px; padding-right: 16px; scrollbar-width: none; }
+  .picks-scroll::-webkit-scrollbar { display: none; }
+  .pick-card { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); width: 232px; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .pick-header { background: var(--nomura-red); padding: 12px 14px 10px; position: relative; overflow: hidden; }
+  .pick-header-geo-1 { position:absolute; inset:0; background:rgba(0,0,0,0.22); clip-path:polygon(0 0,40% 0,18% 100%,0 100%); }
+  .pick-header-geo-2 { position:absolute; inset:0; background:rgba(0,0,0,0.12); clip-path:polygon(22% 0,65% 0,43% 100%,-5% 100%); }
+  .pick-type-badge { display: inline-block; background: rgba(255,255,255,0.20); color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; position: relative; z-index: 1; }
+  .pick-fund-name { font-size: 13px; font-weight: 700; color: white; margin-top: 6px; line-height: 1.3; position: relative; z-index: 1; }
+  .pick-manager { font-size: 10px; color: rgba(255,255,255,0.72); margin-top: 2px; position: relative; z-index: 1; }
+  .pick-body { padding: 12px 14px 14px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .pick-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pick-metric-label { font-size: 10px; color: var(--support); margin-bottom: 2px; }
+  .pick-metric-value { font-size: 13px; font-weight: 700; color: var(--text); }
+  .pick-cta { margin-top: auto; background: var(--nomura-blush); color: var(--nomura-red); font-size: 12px; font-weight: 700; font-family: inherit; border: none; border-radius: 8px; padding: 8px 0; cursor: pointer; width: 100%; text-align: center; }
+
+  .cms-section { padding: 0 16px 16px; }
+  .cms-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .cms-scroll { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; margin: 0 -16px; padding-left: 16px; scrollbar-width: none; }
+  .cms-scroll::-webkit-scrollbar { display: none; }
+  .cms-card { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); width: 300px; flex-shrink: 0; overflow: hidden; padding-bottom: 16px; }
+  .cms-card-img { width: 100%; height: 96px; object-fit: cover; display: block; }
+  .cms-body { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 8px; }
+  .cms-title { font-size: 17px; font-weight: 600; color: var(--text); }
+  .cms-excerpt { font-size: 15px; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  .cms-read-more { font-size: 15px; font-weight: 600; color: var(--nomura-red); background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+
+  /* Dashboard Bottom Tab Bar */
+  .bottom-tab-bar { background: #1A1A1A; border-top: 1px solid #333; flex-shrink: 0; }
+  .tab-items { display: flex; }
+  .tab-item-bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 49px; padding: 4px; background: none; border: none; cursor: pointer; font-family: inherit; }
+  .tab-text { font-size: 10px; text-align: center; }
+  .tab-text-active { color: var(--nomura-red); font-weight: 600; }
+  .tab-text-grey { color: #888; }
+  .home-indicator { height: 34px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; }
+  .home-bar { width: 134px; height: 5px; background: rgba(255,255,255,0.20); border-radius: 100px; }
+
+  /* Notification overlay */
+  .overlay { position: absolute; inset: 0; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+  .overlay.visible { opacity: 1; pointer-events: auto; }
+  .overlay-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+  .overlay-panel { position: absolute; top: 0; right: 0; width: 88%; height: 100%; background: #fff; transform: translateX(100%); transition: transform 0.25s ease; display: flex; flex-direction: column; }
+  .overlay.visible .overlay-panel { transform: translateX(0); }
+
+  /* General Legacy Sections */
+  .section { padding: 16px 16px 0; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div>
+    <h2>Nomura Wealth</h2>
+    <p class="sub">Mobile Prototype Navigation</p>
+  </div>
+  <div class="sidebar-section" style="flex: 1;">
+    <label>Features & Screens</label>
+    <ul class="feature-nav">
+      <li><button onclick="goTo('login')">1. Login</button></li>
+      <li><button onclick="goTo('home')">2. Dashboard</button></li>
+      <li><button onclick="goTo('portfolio')">3. Portfolio Summary</button></li>
+      <li><button onclick="goTo('allocation')">4. Asset Allocation</button></li>
+      <li><button onclick="goTo('movement')">5. Account Movement</button></li>
+      <li><button onclick="goTo('estatements')">6. eStatements</button></li>
+      <li><button onclick="goTo('market')">7. Market Data</button></li>
+      <li><button onclick="goTo('orders')">8. Orders</button></li>
+      <li><button onclick="goTo('planning')">9. Wealth Planning</button></li>
+      <li><button onclick="goTo('ai')">10. AI Assistant</button></li>
+      <li><button onclick="goTo('settings')">11. Settings</button></li>
+    </ul>
+  </div>
+</div>
+
+<div class="phone-wrapper">
+  <div class="phone">
+
+    <div class="screen active" id="screen-login">
+      <div class="status-bar" style="background: var(--nomura-deep); color: white;">    
+        <span class="status-time" style="font-size: 17px; font-weight: 600;">9:41</span>    
+        <div class="status-icons">      
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="white"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5.5" width="3" height="6.5" rx="0.5"/><rect x="9" y="3" width="3" height="9" rx="0.5"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" opacity="0.35"/></svg>      
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="white"><path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/><path d="M8 6C5.8 6 3.8 6.9 2.4 8.4l1.4 1.4A5 5 0 0 1 8 8a5 5 0 0 1 4.2 1.8l1.4-1.4A7 7 0 0 0 8 6z" opacity="0.6"/><path d="M8 2C4.7 2 1.7 3.4 0 5.7l1.4 1.4A8.9 8.9 0 0 1 8 4c2.6 0 5 1.1 6.6 2.9l1.4-1.4A11 11 0 0 0 8 2z" opacity="0.35"/></svg>      
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="white"><rect x="0" y="1" width="21" height="10" rx="2.5" stroke="white" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="15" height="7" rx="1.5" fill="white"/><path d="M22.5 4v4a2 2 0 0 0 0-4z"/></svg>    
+        </div>  
+      </div>
+      <div class="header">    
+        <div class="geo-bg" aria-hidden="true"><div class="geo geo-1"></div><div class="geo geo-2"></div><div class="geo geo-3"></div></div>
+        <div class="header-top">      
+          <img class="nomura-logo-img" src="image_ddd20b.png" alt="Nomura">      
+          <div class="header-eyebrow">International Wealth Management</div>    
+        </div>
+        <div class="header-bottom">      
+          <div class="header-greeting">Welcome back,<br>Rajiv</div>      
+          <div class="header-switch">Not you? <a>Switch to another user</a></div>    
+        </div>  
+      </div>
+      <div class="gradient-bar"></div>
+      <div class="login-cards-body">    
+        <div class="section-label">Sign in with</div>
+        <div class="cards">      
+          <button class="login-card-btn card-primary" onclick="goTo('home')" aria-label="Face ID login">        
+            <div class="card-icon-wrap">          
+              <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.625 8.78125V5.1875C1.625 3.22312 3.22316 1.625 5.1875 1.625H8.78125C9.22997 1.625 9.59375 1.26122 9.59375 0.8125C9.59375 0.363781 9.22997 0 8.78125 0H5.1875C2.32712 0 0 2.32709 0 5.1875V8.78125C0 9.22997 0.363781 9.59375 0.8125 9.59375C1.26122 9.59375 1.625 9.22997 1.625 8.78125ZM8.78125 30.375C9.22997 30.375 9.59375 30.7388 9.59375 31.1875C9.59375 31.6362 9.22997 32 8.78125 32H5.1875C2.32712 32 0 29.6729 0 26.8125V23.2188C0 22.77 0.363781 22.4062 0.8125 22.4062C1.26122 22.4062 1.625 22.77 1.625 23.2188V26.8125C1.625 28.7768 3.22316 30.375 5.1875 30.375H8.78125ZM32 23.2188V26.8125C32 29.6729 29.6729 32 26.8125 32H23.2188C22.77 32 22.4062 31.6362 22.4062 31.1875C22.4062 30.7388 22.77 30.375 23.2188 30.375H26.8125C28.7768 30.375 30.375 28.7768 30.375 26.8125V23.2188C30.375 22.77 30.7388 22.4062 31.1875 22.4062C31.6362 22.4062 32 22.77 32 23.2188ZM32 5.1875V8.78125C32 9.22997 31.6362 9.59375 31.1875 9.59375C30.7388 9.59375 30.375 9.22997 30.375 8.78125V5.1875C30.375 3.22312 28.7768 1.625 26.8125 1.625H23.2188C22.77 1.625 22.4062 1.26122 22.4062 0.8125C22.4062 0.363781 22.77 0 23.2188 0H26.8125C29.6729 0 32 2.32709 32 5.1875ZM21.6071 23.6511C21.9494 23.3349 21.9706 22.8011 21.6544 22.4587C21.3381 22.1164 20.8044 22.0953 20.4621 22.4114C19.244 23.5366 17.6593 24.1562 15.9999 24.1562C14.3405 24.1562 12.7558 23.5366 11.5378 22.4114C11.1954 22.0953 10.6617 22.1165 10.3455 22.4587C10.0293 22.8011 10.0505 23.3349 10.3928 23.6511C11.9236 25.065 13.9148 25.8437 15.9999 25.8437C18.085 25.8437 20.0763 25.065 21.6071 23.6511ZM17.6875 12.0625V18.0625C17.6875 19.2515 16.7202 20.2188 15.5312 20.2188H14.8438C14.3778 20.2188 14 19.841 14 19.375C14 18.909 14.3778 18.5312 14.8438 18.5312H15.5312C15.7897 18.5312 16 18.321 16 18.0625V12.0625C16 11.5965 16.3778 11.2188 16.8438 11.2188C17.3097 11.2188 17.6875 11.5965 17.6875 12.0625ZM23.5 14.4219V12.0156C23.5 11.5755 23.1432 11.2188 22.7031 11.2188C22.263 11.2188 21.9062 11.5755 21.9062 12.0156V14.4219C21.9062 14.862 22.263 15.2188 22.7031 15.2188C23.1432 15.2188 23.5 14.862 23.5 14.4219ZM8.6875 14.4219C8.6875 14.862 9.04428 15.2188 9.48438 15.2188C9.92447 15.2188 10.2812 14.862 10.2812 14.4219V12.0156C10.2812 11.5755 9.92447 11.2188 9.48438 11.2188C9.04428 11.2188 8.6875 11.5755 8.6875 12.0156V14.4219Z" fill="white"/></svg>        
+            </div>        
+            <div>          
+              <div class="card-label">Face ID</div>          
+              <div class="card-sub">Biometric login</div>        
+            </div>      
+          </button>
+          <button class="login-card-btn" onclick="goTo('home')" aria-label="Passcode login">        
+            <div class="card-icon-wrap">          
+              <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 25.3333C14.5333 25.3333 13.3333 26.5333 13.3333 28C13.3333 29.4667 14.5333 30.6667 16 30.6667C17.4667 30.6667 18.6667 29.4667 18.6667 28C18.6667 26.5333 17.4667 25.3333 16 25.3333ZM8 1.33333C6.53333 1.33333 5.33333 2.53333 5.33333 4C5.33333 5.46667 6.53333 6.66667 8 6.66667C9.46667 6.66667 10.6667 5.46667 10.6667 4C10.6667 2.53333 9.46667 1.33333 8 1.33333ZM8 9.33333C6.53333 9.33333 5.33333 10.5333 5.33333 12C5.33333 13.4667 6.53333 14.6667 8 14.6667C9.46667 14.6667 10.6667 13.4667 10.6667 12C10.6667 10.5333 9.46667 9.33333 8 9.33333ZM8 17.3333C6.53333 17.3333 5.33333 18.5333 5.33333 20C5.33333 21.4667 6.53333 22.6667 8 22.6667C9.46667 22.6667 10.6667 21.4667 10.6667 20C10.6667 18.5333 9.46667 17.3333 8 17.3333ZM24 6.66667C25.4667 6.66667 26.6667 5.46667 26.6667 4C26.6667 2.53333 25.4667 1.33333 24 1.33333C22.5333 1.33333 21.3333 2.53333 21.3333 4C21.3333 5.46667 22.5333 6.66667 24 6.66667ZM16 17.3333C14.5333 17.3333 13.3333 18.5333 13.3333 20C13.3333 21.4667 14.5333 22.6667 16 22.6667C17.4667 22.6667 18.6667 21.4667 18.6667 20C18.6667 18.5333 17.4667 17.3333 16 17.3333ZM24 17.3333C22.5333 17.3333 21.3333 18.5333 21.3333 20C21.3333 21.4667 22.5333 22.6667 24 22.6667C25.4667 22.6667 26.6667 21.4667 26.6667 20C26.6667 18.5333 25.4667 17.3333 24 17.3333ZM24 9.33333C22.5333 9.33333 21.3333 10.5333 21.3333 12C21.3333 13.4667 22.5333 14.6667 24 14.6667C25.4667 14.6667 26.6667 13.4667 26.6667 12C26.6667 10.5333 25.4667 9.33333 24 9.33333ZM16 9.33333C14.5333 9.33333 13.3333 10.5333 13.3333 12C13.3333 13.4667 14.5333 14.6667 16 14.6667C17.4667 14.6667 18.6667 13.4667 18.6667 12C18.6667 10.5333 17.4667 9.33333 16 9.33333ZM16 1.33333C14.5333 1.33333 13.3333 2.53333 13.3333 4C13.3333 5.46667 14.5333 6.66667 16 6.66667C17.4667 6.66667 18.6667 5.46667 18.6667 4C18.6667 2.53333 17.4667 1.33333 16 1.33333Z" fill="#D81032"/></svg>        
+            </div>        
+            <div>          
+              <div class="card-label">Passcode</div>          
+              <div class="card-sub">Numeric PIN</div>        
+            </div>      
+          </button>    
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-home">
+      <div class="scroll-area">
+        <div class="tab-header">      
+          <div class="geo-bg" aria-hidden="true">        
+            <div class="geo geo-1"></div><div class="geo geo-2"></div><div class="geo geo-3"></div>      
+          </div>
+          <div class="status-bar">        
+            <span class="status-time">9:41</span>        
+            <div class="status-icons">          
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="white"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5.5" width="3" height="6.5" rx="0.5"/><rect x="9" y="3" width="3" height="9" rx="0.5"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" opacity="0.35"/></svg>          
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="white"><path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/><path d="M8 6C5.8 6 3.8 6.9 2.4 8.4l1.4 1.4A5 5 0 0 1 8 8a5 5 0 0 1 4.2 1.8l1.4-1.4A7 7 0 0 0 8 6z" opacity="0.6"/><path d="M8 2C4.7 2 1.7 3.4 0 5.7l1.4 1.4A8.9 8.9 0 0 1 8 4c2.6 0 5 1.1 6.6 2.9l1.4-1.4A11 11 0 0 0 8 2z" opacity="0.35"/></svg>          
+              <svg width="27" height="13" viewBox="0 0 27 13" fill="white"><rect x="0.6" y="1" width="21" height="11" rx="3" stroke="white" stroke-width="1.2" fill="none"/><rect x="2" y="2.5" width="16" height="8" rx="1.5" fill="white"/><path d="M22.5 4.5v4a2 2 0 0 0 0-4z"/></svg>        
+            </div>      
+          </div>
+          <div class="toolbar">        
+            <div class="toolbar-leading">          
+              <div class="avatar">RM</div>
+              <div>            
+                <div class="user-name">Rajiv Menon</div>            
+                <div class="user-role" data-i18n="role">Priority Client</div>          
+              </div>        
+            </div>        
+            <div class="toolbar-trailing">          
+              <select id="dash-lang-select" onchange="changeDashLanguage(this.value)" style="background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; padding: 2px 4px; font-size: 11px; margin-right: 4px; outline: none; cursor: pointer;">
+                <option value="en" style="color: black;">EN</option>
+                <option value="zh" style="color: black;">简</option>
+                <option value="ja" style="color: black;">日</option>
+              </select>
+              <div class="notif-wrap" onclick="toggleNotifications()">            
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.93 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>            
+                <div class="notif-dot"></div>          
+              </div>          
+              <span class="contact-text" onclick="goTo('settings')" data-i18n="contact">Contact</span>        
+            </div>      
+          </div>
+          <div class="tabs">        
+            <button class="tab active" data-i18n="tabDash">Dashboard</button>        
+            <button class="tab" data-i18n="tabDocs">My documents</button>        
+            <button class="tab" data-i18n="tabEvents">Events & Insights</button>      
+          </div>    
+        </div>
+        <div class="content-bg-top">      
+          <div class="content">
+            <div class="card">          
+              <div class="card-header">            
+                <span class="card-title" data-i18n="totalBal">Total balance with Nomura</span>            
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#3A495D" flex-shrink="0"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5A3.5 3.5 0 0 1 15.5 12A3.5 3.5 0 0 1 12 15.5M19.43 12.97C19.47 12.65 19.5 12.33 19.5 12C19.5 11.67 19.47 11.34 19.43 11L21.54 9.37C21.73 9.22 21.78 8.95 21.66 8.73L19.66 5.27C19.54 5.05 19.27 4.96 19.05 5.05L16.56 6.05C16.04 5.66 15.48 5.32 14.87 5.07L14.49 2.42C14.46 2.18 14.25 2 14 2H10C9.75 2 9.54 2.18 9.51 2.42L9.13 5.07C8.52 5.32 7.96 5.66 7.44 6.05L4.95 5.05C4.72 4.96 4.46 5.05 4.34 5.27L2.34 8.73C2.21 8.95 2.27 9.22 2.46 9.37L4.57 11C4.53 11.34 4.5 11.67 4.5 12C4.5 12.33 4.53 12.65 4.57 13L2.46 14.63C2.27 14.78 2.21 15.05 2.34 15.27L4.34 18.73C4.46 18.95 4.73 19.03 4.95 18.95L7.44 17.95C7.96 18.34 8.52 18.68 9.13 18.93L9.51 21.58C9.54 21.82 9.75 22 10 22H14C14.25 22 14.46 21.82 14.49 21.58L14.87 18.93C15.48 18.68 16.04 18.34 16.56 17.95L19.05 18.95C19.27 19.03 19.54 18.95 19.66 18.73L21.66 15.27C21.78 15.05 21.73 14.78 21.54 14.63L19.43 12.97Z"/></svg>          
+              </div>          
+              <div class="balance-row">            
+                <div class="flag"></div>            
+                <span class="balance-value">$14,694,168.55</span>          
+              </div>          
+              <div class="balance-delta">            
+                <span class="positive">+$1.51M</span>            
+                <span class="delta-label" data-i18n="sinceLastWeek">since last week</span>          
+              </div>        
+            </div>
+            <div class="card">          
+              <div class="nw-header">            
+                <span class="card-title" data-i18n="totalNW">Total net worth</span>            
+                <span class="nw-total">$26,362,019.69</span>          
+              </div>          
+              <div class="nw-rows">            
+                <div class="nw-row"><span class="nw-label" data-i18n="assets">Assets</span><span class="nw-value">$29,543,228.77</span></div>            
+                <div class="nw-row"><span class="nw-label" data-i18n="liab">Liabilities</span><span class="nw-value">$3,181,209.08</span></div>          
+              </div>          
+              <div class="seg-ctrl">            
+                <button class="seg active" data-i18n="assets">Assets</button>            
+                <button class="seg" data-i18n="liab">Liabilities</button>          
+              </div>          
+              <div class="bar-chart">            
+                <div style="background:#ff5c4d;flex:18.31"></div>            
+                <div style="background:#ff9636;flex:31.44"></div>            
+                <div style="background:#ffcd58;flex:21.11"></div>            
+                <div style="background:#dad870;flex:23.73"></div>            
+                <div style="background:#ac85c7;flex:5.42"></div>          
+              </div>          
+              <div class="legend">            
+                <div class="legend-row"><div class="legend-label"><div class="legend-dot" style="background:#ff5c4d"></div><span class="legend-text" data-i18n="cash">Cash accounts</span></div><span class="legend-value">$5.40M (18.31%)</span></div>            
+                <div class="legend-row"><div class="legend-label"><div class="legend-dot" style="background:#ff9636"></div><span class="legend-text" data-i18n="invest">Investment portfolios</span></div><span class="legend-value">$9.28M (31.44%)</span></div>            
+                <div class="legend-row"><div class="legend-label"><div class="legend-dot" style="background:#ffcd58"></div><span class="legend-text" data-i18n="alt">Alternatives assets</span></div><span class="legend-value">$6.23M (21.11%)</span></div>            
+                <div class="legend-row"><div class="legend-label"><div class="legend-dot" style="background:#dad870"></div><span class="legend-text" data-i18n="realEstate">Real Estate</span></div><span class="legend-value">$7.01M (23.73%)</span></div>            
+                <div class="legend-row"><div class="legend-label"><div class="legend-dot" style="background:#ac85c7"></div><span class="legend-text" data-i18n="other">Other assets</span></div><span class="legend-value">$1.60M (5.42%)</span></div>          
+              </div>        
+            </div>
+            <div class="quick-actions">          
+              <button class="action-btn">            
+                <div class="action-circle">              
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>            
+                </div>            
+                <span class="action-label" data-i18n="payments">Payments</span>          
+              </button>          
+              <button class="action-btn">            
+                <div class="action-circle">              
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>            
+                </div>            
+                <span class="action-label" data-i18n="addAcc">Add new account</span>          
+              </button>        
+            </div>
+            <div class="card card-dark">          
+              <div class="card-header">            
+                <span class="card-title card-title-light" data-i18n="vot">Value over time</span>          
+              </div>          
+              <div class="chart-outer">            
+                <div class="chart-grid">              
+                  <div class="grid-line"></div><div class="grid-line"></div>              
+                  <div class="grid-line"></div><div class="grid-line"></div>              
+                  <div class="grid-line"></div>            
+                </div>            
+                <div class="chart-svg-area">              
+                  <svg viewBox="0 0 343 180" preserveAspectRatio="none" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">                
+                    <defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="white" stop-opacity="0.22"/><stop offset="100%" stop-color="white" stop-opacity="0.03"/></linearGradient></defs>                
+                    <path d="M0,148 C15,143 30,140 45,144 C60,148 75,138 90,131 C105,124 118,127 132,118 C146,109 158,112 172,104 C186,96 198,91 212,84 C226,77 238,80 252,72 C266,64 276,58 290,54 C304,50 316,44 330,42 C336,41 340,40 343,39 L343,180 L0,180 Z" fill="url(#areaGrad)"/>                
+                    <path d="M0,148 C15,143 30,140 45,144 C60,148 75,138 90,131 C105,124 118,127 132,118 C146,109 158,112 172,104 C186,96 198,91 212,84 C226,77 238,80 252,72 C266,64 276,58 290,54 C304,50 316,44 330,42 C336,41 340,40 343,39" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>                
+                    <circle cx="343" cy="39" r="4" fill="white"/>              
+                  </svg>            
+                </div>            
+                <div class="x-axis">              
+                  <span class="x-label">01/14/25</span>              
+                  <span class="x-label">01/21/25</span>              
+                  <span class="x-label">01/28/25</span>              
+                  <span class="x-label" data-i18n="today">Today</span>            
+                </div>          
+              </div>          
+              <div class="period-row">            
+                <button class="period-btn active" onclick="setPeriod(this)">1M</button>            
+                <button class="period-btn" onclick="setPeriod(this)">3M</button>            
+                <button class="period-btn" onclick="setPeriod(this)">6M</button>            
+                <button class="period-btn" onclick="setPeriod(this)">1Y</button>            
+                <button class="period-btn" onclick="setPeriod(this)">YTD</button>            
+                <button class="period-btn" onclick="setPeriod(this)">All</button>          
+              </div>        
+            </div>
+            <div class="picks-section" style="margin: 0 -16px;">          
+              <div style="display:flex; justify-content:space-between; align-items:center; padding: 0 16px 12px;">            
+                <span style="font-size:16px; font-weight:700; color:var(--text);" data-i18n="picksTitle">Nomura's pick for you</span>            
+                <span class="card-action" data-i18n="viewAll">View all</span>          
+              </div>          
+              <div class="picks-scroll">
+                <div class="pick-card">              
+                  <div class="pick-header">                
+                    <div class="pick-header-geo-1"></div><div class="pick-header-geo-2"></div>                
+                    <span class="pick-type-badge" data-i18n="pe">Private Equity</span>                
+                    <div class="pick-fund-name">KKR Asia Pacific<br>Fund V</div>                
+                    <div class="pick-manager">KKR &amp; Co. · Nomura distributed</div>              
+                  </div>              
+                  <div class="pick-body">                
+                    <div class="pick-metrics">                  
+                      <div><div class="pick-metric-label" data-i18n="targetIrr">Target Net IRR</div><div class="pick-metric-value">18–22%</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="fundSize">Fund Size</div><div class="pick-metric-value">USD 15B</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="minInv">Min. Investment</div><div class="pick-metric-value">USD 2M</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="lockup">Lock-up</div><div class="pick-metric-value">10 yrs</div></div>                
+                    </div>                
+                    <button class="pick-cta" data-i18n="exprInt">Express Interest</button>              
+                  </div>            
+                </div>
+                <div class="pick-card">              
+                  <div class="pick-header">                
+                    <div class="pick-header-geo-1"></div><div class="pick-header-geo-2"></div>                
+                    <span class="pick-type-badge" data-i18n="hf">Hedge Fund</span>                
+                    <div class="pick-fund-name">Millennium Multi-<br>Strategy UCITS</div>                
+                    <div class="pick-manager">Millennium Mgmt. · UCITS structure</div>              
+                  </div>              
+                  <div class="pick-body">                
+                    <div class="pick-metrics">                  
+                      <div><div class="pick-metric-label" data-i18n="targetRet">Target Return</div><div class="pick-metric-value">12–16% p.a.</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="aum">AUM</div><div class="pick-metric-value">USD 68B</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="minInv">Min. Investment</div><div class="pick-metric-value">USD 1M</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="liquidity">Liquidity</div><div class="pick-metric-value">Quarterly</div></div>                
+                    </div>                
+                    <button class="pick-cta" data-i18n="exprInt">Express Interest</button>              
+                  </div>            
+                </div>
+                <div class="pick-card">              
+                  <div class="pick-header">                
+                    <div class="pick-header-geo-1"></div><div class="pick-header-geo-2"></div>                
+                    <span class="pick-type-badge" data-i18n="infra">Infrastructure</span>                
+                    <div class="pick-fund-name">Macquarie Asia<br>Infrastructure Fund III</div>                
+                    <div class="pick-manager">Macquarie Asset Mgmt.</div>              
+                  </div>              
+                  <div class="pick-body">                
+                    <div class="pick-metrics">                  
+                      <div><div class="pick-metric-label" data-i18n="targetIrr">Target Net IRR</div><div class="pick-metric-value">12–15%</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="fundSize">Fund Size</div><div class="pick-metric-value">USD 8B</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="minInv">Min. Investment</div><div class="pick-metric-value">USD 5M</div></div>                  
+                      <div><div class="pick-metric-label" data-i18n="lockup">Lock-up</div><div class="pick-metric-value">12 yrs</div></div>                
+                    </div>                
+                    <button class="pick-cta" data-i18n="exprInt">Express Interest</button>              
+                  </div>            
+                </div>
+              </div>        
+            </div>
+            <div class="card">          
+              <div class="card-header">            
+                <span class="card-title" data-i18n="topPort">Top portfolios by</span>            
+                <span class="card-action" data-i18n="viewAll">View all</span>          
+              </div>          
+              <div class="select-field">            
+                <span class="select-label" data-i18n="mktVal">Market value</span>            
+                <div class="select-arrow-box">              
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#3A495D"><path d="M7 10l5 5 5-5z"/></svg>            
+                </div>          
+              </div>          
+              <div class="portfolio-list">
+                <div class="portfolio-item" onclick="goTo('portfolio')">              
+                  <div class="portfolio-top">                
+                    <div class="portfolio-leading">                  
+                      <div class="portfolio-icon" style="background:#FCEAED">                    
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="#D81032"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>                  
+                      </div>                  
+                      <div>                    
+                        <div class="portfolio-name">Long-Term Growth</div>                    
+                        <div class="portfolio-type" data-i18n="advisory">Advisory</div>                  
+                      </div>                
+                    </div>                
+                    <div class="portfolio-amount-col">                  
+                      <div class="portfolio-amount">$2,118,784.56</div>                  
+                      <div class="portfolio-manager">Menon Capital Partners</div>                
+                    </div>              
+                  </div>              
+                  <div class="portfolio-bottom">                
+                    <svg class="mini-chart" viewBox="0 0 120 45" preserveAspectRatio="none">                  
+                      <defs><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E813E" stop-opacity="0.2"/><stop offset="100%" stop-color="#0E813E" stop-opacity="0"/></linearGradient></defs>                  
+                      <path d="M0,38 C8,36 16,34 24,32 C32,30 38,33 46,28 C54,23 60,25 70,20 C80,15 88,17 96,12 C104,7 112,8 120,5 L120,45 L0,45 Z" fill="url(#sg1)"/>                  
+                      <path d="M0,38 C8,36 16,34 24,32 C32,30 38,33 46,28 C54,23 60,25 70,20 C80,15 88,17 96,12 C104,7 112,8 120,5" fill="none" stroke="#0E813E" stroke-width="1.5" stroke-linecap="round"/>                
+                    </svg>                
+                    <div class="delta-col">                  
+                      <span class="delta-pos">+$144,499.07</span>                  
+                      <span class="delta-pos" style="font-weight:400">+6.82%</span>                
+                    </div>              
+                  </div>            
+                </div>
+                <div class="portfolio-item" onclick="goTo('portfolio')">              
+                  <div class="portfolio-top">                
+                    <div class="portfolio-leading">                  
+                      <div class="portfolio-icon" style="background:#FCEAED">                    
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="#D81032"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.5-2.33 6.79-5 7.93C9.33 17.79 7 14.5 7 11V7.18L12 5z"/></svg>                  
+                      </div>                  
+                      <div>                    
+                        <div class="portfolio-name">Liquidity Managemen…</div>                    
+                        <div class="portfolio-type" data-i18n="disc">Discretionary</div>                  
+                      </div>                
+                    </div>                
+                    <div class="portfolio-amount-col">                  
+                      <div class="portfolio-amount">$1,949,284.33</div>                  
+                      <div class="portfolio-manager">Menon Family Trust</div>                
+                    </div>              
+                  </div>              
+                  <div class="portfolio-bottom">                
+                    <svg class="mini-chart" viewBox="0 0 120 45" preserveAspectRatio="none">                  
+                      <defs><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E813E" stop-opacity="0.2"/><stop offset="100%" stop-color="#0E813E" stop-opacity="0"/></linearGradient></defs>                  
+                      <path d="M0,40 C10,37 20,35 30,36 C40,37 48,31 58,26 C68,21 76,23 86,17 C96,11 106,9 120,4 L120,45 L0,45 Z" fill="url(#sg2)"/>                  
+                      <path d="M0,40 C10,37 20,35 30,36 C40,37 48,31 58,26 C68,21 76,23 86,17 C96,11 106,9 120,4" fill="none" stroke="#0E813E" stroke-width="1.5" stroke-linecap="round"/>                
+                    </svg>                
+                    <div class="delta-col">                  
+                      <span class="delta-pos">+$151,874.37</span>                  
+                      <span class="delta-pos" style="font-weight:400">+7.79%</span>                
+                    </div>              
+                  </div>            
+                </div>
+                <div class="portfolio-item" onclick="goTo('portfolio')">              
+                  <div class="portfolio-top">                
+                    <div class="portfolio-leading">                  
+                      <div class="portfolio-icon" style="background:#FCEAED">                    
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="#D81032"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>                  
+                      </div>                  
+                      <div>                    
+                        <div class="portfolio-name">Private Equity Long…</div>                    
+                        <div class="portfolio-type" data-i18n="advisory">Advisory</div>                  
+                      </div>                
+                    </div>                
+                    <div class="portfolio-amount-col">                  
+                      <div class="portfolio-amount">$1,408,343.92</div>                  
+                      <div class="portfolio-manager">Rajiv Menon</div>                
+                    </div>              
+                  </div>              
+                  <div class="portfolio-bottom">                
+                    <svg class="mini-chart" viewBox="0 0 120 45" preserveAspectRatio="none">                  
+                      <defs><linearGradient id="sg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E813E" stop-opacity="0.2"/><stop offset="100%" stop-color="#0E813E" stop-opacity="0"/></linearGradient></defs>                  
+                      <path d="M0,36 C8,34 16,38 26,34 C36,30 44,32 54,27 C64,22 72,26 82,20 C92,14 100,11 110,8 C114,7 117,6 120,5 L120,45 L0,45 Z" fill="url(#sg3)"/>                  
+                      <path d="M0,36 C8,34 16,38 26,34 C36,30 44,32 54,27 C64,22 72,26 82,20 C92,14 100,11 110,8 C114,7 117,6 120,5" fill="none" stroke="#0E813E" stroke-width="1.5" stroke-linecap="round"/>                
+                    </svg>                
+                    <div class="delta-col">                  
+                      <span class="delta-pos">+$87,776.02</span>                  
+                      <span class="delta-pos" style="font-weight:400">+6.23%</span>                
+                    </div>              
+                  </div>            
+                </div>
+              </div>        
+            </div>
+          </div>    
+        </div>
+        
+        <div class="cms-section">      
+          <div class="cms-header">        
+            <span class="card-title" data-i18n="eventsTitle">Events & Insights</span>        
+            <span class="card-action" data-i18n="viewAll">View all</span>      
+          </div>      
+          <div class="cms-scroll">
+            <div class="cms-card">          
+              <svg class="cms-card-img" viewBox="0 0 300 130" xmlns="http://www.w3.org/2000/svg">            
+                <defs>              
+                  <linearGradient id="forumBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#120205"/><stop offset="100%" stop-color="#0A0A0A"/></linearGradient>              
+                  <radialGradient id="stageGlow" cx="88%" cy="60%" r="55%"><stop offset="0%" stop-color="#D81032" stop-opacity="0.45"/><stop offset="50%" stop-color="#D81032" stop-opacity="0.15"/><stop offset="100%" stop-color="#D81032" stop-opacity="0"/></radialGradient>              
+                  <radialGradient id="spotlight" cx="72%" cy="0%" r="60%"><stop offset="0%" stop-color="white" stop-opacity="0.10"/><stop offset="100%" stop-color="white" stop-opacity="0"/></radialGradient>            
+                </defs>
+                <rect width="300" height="130" fill="url(#forumBg)"/>            
+                <rect width="300" height="130" fill="url(#stageGlow)"/>            
+                <rect width="300" height="130" fill="url(#spotlight)"/>
+                <polygon points="0,0 52,0 26,130 0,130" fill="#8C0018" fill-opacity="0.72"/>            
+                <polygon points="24,0 80,0 56,130 0,130" fill="#B5001F" fill-opacity="0.42"/>            
+                <polygon points="55,0 108,0 85,130 32,130" fill="#D81032" fill-opacity="0.20"/>            
+                <line x1="108" y1="0" x2="85" y2="130" stroke="#FF4060" stroke-width="0.8" stroke-opacity="0.35"/>
+                <rect x="208" y="8" width="82" height="72" rx="2" fill="#1C0306" stroke="#D81032" stroke-width="0.7" stroke-opacity="0.55"/>            
+                <rect x="212" y="12" width="74" height="64" rx="1" fill="#D81032" fill-opacity="0.06"/>            
+                <text x="249" y="60" font-family="Georgia,serif" font-size="38" fill="#D81032" fill-opacity="0.30" font-weight="900" text-anchor="middle">N</text>            
+                <polygon points="240,8 258,8 276,80 222,80" fill="white" fill-opacity="0.025"/>            
+                <rect x="190" y="80" width="110" height="2.5" rx="1" fill="#D81032" fill-opacity="0.75"/>            
+                <polygon points="240,67 258,67 262,80 236,80" fill="#151515"/>            
+                <rect x="239" y="64" width="20" height="4" rx="1" fill="#D81032" fill-opacity="0.55"/>            
+                <ellipse cx="249" cy="59" rx="6.5" ry="6.5" fill="#0F0F0F"/>            
+                <path d="M242,66 Q249,62 256,66 L258,80 Q249,76 240,80 Z" fill="#0F0F0F"/>
+                <g fill="#1C1C1C"><ellipse cx="108" cy="53" rx="4.5" ry="4.5"/><rect x="103.5" y="57" width="9" height="6" rx="2"/></g>            
+                <rect x="60" y="10" width="96" height="17" rx="8.5" fill="white" fill-opacity="0.14"/>            
+                <text x="108" y="22.5" font-family="sans-serif" font-size="9" fill="white" font-weight="700" text-anchor="middle" letter-spacing="1.2">PRIVATE EVENT</text>            
+                <text x="60" y="46" font-family="sans-serif" font-size="13" fill="white" font-weight="800">Nomura Asia Investment Forum</text>            
+                <text x="60" y="62" font-family="sans-serif" font-size="10" fill="rgba(255,255,255,0.65)">Singapore · 18 June 2026</text>          
+              </svg>          
+              <div class="cms-body">            
+                <div class="cms-title">Nomura Asia Investment Forum 2026</div>            
+                <div class="cms-excerpt">Join senior Nomura bankers and a curated group of ultra-high-net-worth clients for a half-day forum on private markets, macro strategy, and cross-border deal flow across Asia-Pacific.</div>            
+                <button class="cms-read-more" data-i18n="regInt">Register interest</button>          
+              </div>        
+            </div>
+            <div class="cms-card">          
+              <svg class="cms-card-img" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">            
+                <defs><linearGradient id="cg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0D1F3C"/><stop offset="100%" stop-color="#1A3560"/></linearGradient></defs>            
+                <rect width="300" height="120" fill="url(#cg2)"/>            
+                <line x1="0" y1="100" x2="300" y2="100" stroke="white" stroke-opacity="0.06" stroke-width="1"/>            
+                <polyline points="20,98 60,90 95,85 130,75 160,68 190,55 220,46 260,36 290,28" fill="none" stroke="#4CAF93" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>            
+                <polygon points="20,98 60,90 95,85 130,75 160,68 190,55 220,46 260,36 290,28 290,110 20,110" fill="#4CAF93" fill-opacity="0.12"/>            
+                <rect x="20" y="14" width="44" height="22" rx="4" fill="#D81032"/>            
+                <text x="42" y="29" font-family="sans-serif" font-size="11" fill="white" font-weight="800" text-anchor="middle">IPO</text>            
+                <text x="74" y="29" font-family="sans-serif" font-size="13" fill="white" font-weight="700">NovaTech SGX Listing</text>          
+              </svg>          
+              <div class="cms-body">            
+                <div class="cms-title">Deal Opportunity: NovaTech SGX IPO</div>            
+                <div class="cms-excerpt">Nomura is acting as joint bookrunner on NovaTech's SGX Main Board listing — a Singapore-based semiconductor design firm targeting S$480M at IPO.</div>            
+                <button class="cms-read-more" data-i18n="viewPros">View prospectus</button>          
+              </div>        
+            </div>
+          </div>    
+        </div>
+      </div><div class="bottom-tab-bar">    
+        <div class="tab-items">      
+          <button class="tab-item-bar" onclick="goTo('home')">        
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#D81032"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>        
+            <span class="tab-text tab-text-active" data-i18n="tabDash">Dashboard</span>      
+          </button>      
+          <button class="tab-item-bar" onclick="goTo('portfolio')">        
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#888"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>        
+            <span class="tab-text tab-text-grey" data-i18n="tabWealth">Wealth</span>      
+          </button>      
+          <button class="tab-item-bar" onclick="goTo('market')">        
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#888"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>        
+            <span class="tab-text tab-text-grey" data-i18n="tabDiscover">Discover</span>      
+          </button>      
+          <button class="tab-item-bar" onclick="goTo('movement')">        
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#888"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zm-5 2h-2v5h2v-5zm7 0v5h2v-5h-2zm-6-6L2 8h20l-10-6L2 8zm13 4v7h3v-7h-3zm-1 2h2v5h-2v-5z"/></svg>        
+            <span class="tab-text tab-text-grey" data-i18n="tabBanking">Banking</span>      
+          </button>    
+        </div>    
+        <div class="home-indicator"><div class="home-bar"></div></div>  
+      </div>
+    </div>
+
+    <div class="screen" id="screen-portfolio">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <span class="back-title">Portfolio Summary</span>
+      </div>
+      <div class="portfolio-hero" style="background: linear-gradient(160deg, var(--red) 0%, var(--red-dark) 100%); padding: 16px 20px 28px; color: #fff;">
+        <div class="pf-total-label" style="font-size: 11px; opacity: 0.75; margin-bottom: 4px;">Total Net Asset Value</div>
+        <div class="pf-total" style="font-size: 28px; font-weight: 700;">¥48,235,000</div>
+        <div class="pf-pnl-row" style="display: flex; gap: 16px; margin-top: 8px;">
+          <div class="pf-pnl-item pnl-positive" style="color: #6EE7A0;">
+            <span style="opacity: 0.7; display: block; font-size: 10px; color: #fff;">Today's P&L</span>
+            ▲ ¥234,500 (+0.49%)
+          </div>
+          <div class="pf-pnl-item pnl-positive" style="color: #6EE7A0;">
+            <span style="opacity: 0.7; display: block; font-size: 10px; color: #fff;">YTD Return</span>
+            ▲ +8.2%
+          </div>
+        </div>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg)">
+        <div class="section" style="padding-top:14px">
+          <div class="section-title">Holdings</div>
+          <div class="card">
+            <div class="holding-row" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--gray-border);">
+              <div class="holding-left" style="display: flex; align-items: center; gap: 10px;">
+                <div class="holding-icon" style="width: 36px; height: 36px; border-radius: 10px; background: var(--gray-bg); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-mid);">JP</div>
+                <div>
+                  <div class="holding-name" style="font-size: 13px; font-weight: 600; color: var(--text);">Toyota Motor (7203)</div>
+                  <div class="holding-qty" style="font-size: 11px; color: var(--text-light); margin-top: 1px;">100 shares · JPY Equities</div>
+                </div>
+              </div>
+              <div class="holding-right" style="text-align: right;">
+                <div class="holding-value" style="font-size: 13px; font-weight: 600; color: var(--text);">¥3,120,000</div>
+                <div class="holding-pnl pos" style="color: var(--green); font-size: 11px; margin-top: 1px;">▲ ¥420,000 (+15.6%)</div>
+              </div>
+            </div>
+            <div class="holding-row" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+              <div class="holding-left" style="display: flex; align-items: center; gap: 10px;">
+                <div class="holding-icon" style="width: 36px; height: 36px; border-radius: 10px; background: var(--gray-bg); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-mid);">US</div>
+                <div>
+                  <div class="holding-name" style="font-size: 13px; font-weight: 600; color: var(--text);">Apple Inc (AAPL)</div>
+                  <div class="holding-qty" style="font-size: 11px; color: var(--text-light); margin-top: 1px;">50 shares · US Equities</div>
+                </div>
+              </div>
+              <div class="holding-right" style="text-align: right;">
+                <div class="holding-value" style="font-size: 13px; font-weight: 600; color: var(--text);">¥2,870,000</div>
+                <div class="holding-pnl pos" style="color: var(--green); font-size: 11px; margin-top: 1px;">▲ ¥370,000 (+14.8%)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="height:24px"></div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-allocation">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+        <span class="back-title">Asset Allocation</span>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg);padding:14px 16px">
+        <div class="card">
+          <div class="card-label">By Asset Class</div>
+          <div style="display: flex; flex-direction: column; align-items: center; padding: 20px;">
+            <svg style="width: 180px; height: 180px;" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="90" cy="90" r="65" fill="transparent" stroke="#C8102E" stroke-width="28" stroke-dasharray="142.7 265.3" stroke-dashoffset="0" transform="rotate(-90 90 90)"/>
+              <circle cx="90" cy="90" r="65" fill="transparent" stroke="#1C5FBC" stroke-width="28" stroke-dasharray="102 306" stroke-dashoffset="-142.7" transform="rotate(-90 90 90)"/>
+              <circle cx="90" cy="90" r="65" fill="transparent" stroke="#00875A" stroke-width="28" stroke-dasharray="81.6 326.4" stroke-dashoffset="-244.7" transform="rotate(-90 90 90)"/>
+              <text x="90" y="86" text-anchor="middle" font-size="11" fill="#888" font-family="system-ui">Total</text>
+              <text x="90" y="102" text-anchor="middle" font-size="14" fill="#1A1A1A" font-weight="bold" font-family="system-ui">¥48.2M</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-movement">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+        <span class="back-title">Movement</span>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg);padding:12px 16px">
+        <div class="card">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #E6F4ED;">📈</div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text);">Toyota Motor (7203)</div>
+                <div style="font-size: 11px; color: var(--text-light); margin-top: 1px;">12 May 2026 · Buy 20 shares @ ¥3,450</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 13px; font-weight: 600; color: #C8102E;">-¥69,000</div>
+              <div style="font-size: 11px; color: var(--text-light); margin-top: 1px;">Purchase</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-estatements">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+        <span class="back-title">eStatements</span>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg);padding:12px 16px">
+        <div class="card">
+          <div class="card-label">2026</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 13px 0;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 36px; height: 36px; background: #FEECEC; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--red);">PDF</div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text);">April 2026 Statement</div>
+                <div style="font-size: 11px; color: var(--text-light); margin-top: 2px;">Generated: 1 May 2026 · 2.4 MB</div>
+              </div>
+            </div>
+            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: var(--text-light);"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-market">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+        <span class="back-title">Market Data & Research</span>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg);padding:12px 16px">
+        <div class="section-title" style="padding:0 0 10px">Watchlist</div>
+        <div style="background: #fff; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--text);">7203.T</div>
+            <div style="font-size: 11px; color: var(--text-light); margin-top: 1px;">Toyota Motor</div>
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--text); text-align: right;">¥3,452</div>
+            <div style="font-size: 11px; text-align: right; margin-top: 1px; color: var(--green);">▲ +¥34 (+0.99%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-orders">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+        <span class="back-title">Order Management</span>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg)">
+        <div style="display: flex; gap: 10px; padding: 14px 16px 0;">
+          <button style="flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; background: var(--green); color: #fff;">📈 Buy</button>
+          <button style="flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; background: var(--red); color: #fff;">📉 Sell</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-planning">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+        <span class="back-title">Wealth Planning & Goals</span>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg);padding:14px 16px">
+        <div class="section-title" style="padding:0 0 10px">NISA Utilisation</div>
+        <div style="background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 10px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; justify-content: space-between;">
+            Growth Quota 2026
+            <span style="font-size:12px;color:var(--text-mid);font-weight:500">¥560K / ¥2,400K used</span>
+          </div>
+          <div style="background: var(--gray-bg); border-radius: 6px; height: 10px; margin-bottom: 8px;"><div style="height: 10px; border-radius: 6px; background: var(--red); width: 23%;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-ai">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div class="back-header">
+        <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+        <span class="back-title">AI Assistant</span>
+      </div>
+      <div style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;">
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; margin-bottom: auto; margin-right: 6px;">N</div>
+          <div style="background: var(--gray-bg); color: var(--text); border-bottom-left-radius: 4px; align-self: flex-start; max-width: 80%; padding: 10px 13px; border-radius: 16px; font-size: 13px; line-height: 1.5;">
+            Good morning! I'm your Nomura AI Assistant. I can help you with portfolio questions, market insights, and account information.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-settings">
+      <div class="status-bar red"><span>9:41</span><div class="status-icons"></div></div>
+      <div style="background: var(--red); padding: 20px; color: #fff; display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
+        <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff;">A</div>
+        <div>
+          <div style="font-size: 16px; font-weight: 700;">Rajiv Menon</div>
+          <div style="font-size: 12px; opacity: 0.75; margin-top: 2px;">User ID: D00000001</div>
+        </div>
+      </div>
+      <div class="scroll-body" style="background:var(--gray-bg)">
+        <div style="padding:16px">
+          <button onclick="goTo('login')" style="width:100%;padding:13px;background:#fff;color:var(--red);border:1.5px solid var(--red);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="overlay-notifications">
+      <div class="overlay-backdrop" onclick="toggleNotifications()"></div>
+      <div class="overlay-panel">
+        <div style="background:var(--red);padding:52px 16px 14px;color:#fff;flex-shrink:0">
+          <div style="font-size:16px;font-weight:700">Alerts & Notifications</div>
+          <div style="font-size:11px;opacity:0.7;margin-top:2px">3 unread</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;background:var(--gray-bg);padding:12px 16px">
+          <div style="background: #fff; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; border-left: 3px solid #E67700; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size: 10px; color: var(--text-light);">Today · 9:30 AM</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text); line-height: 1.4;"><strong>🔔 Order Filled:</strong> Toyota Motor — Buy 20 shares @ ¥3,450 executed successfully.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div></div><script>
+  let screenHistory = [];
+  let currentScreen = 'login';
+
+  // Navigation Logic
+  function goTo(screenId) {
+    const cur = document.getElementById('screen-' + currentScreen);
+    const next = document.getElementById('screen-' + screenId);
+    if (!next || screenId === currentScreen) return;
+
+    cur.classList.remove('active');
+    cur.classList.add('slide-back');
+
+    next.style.transform = 'translateX(30px)';
+    next.style.opacity = '0';
+    next.classList.add('active');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        next.style.transform = '';
+        next.style.opacity = '';
+      });
+    });
+
+    setTimeout(() => { cur.classList.remove('slide-back'); }, 300);
+
+    screenHistory.push(currentScreen);
+    currentScreen = screenId;
+
+    const overlay = document.getElementById('overlay-notifications');
+    if(overlay) overlay.classList.remove('visible');
+  }
+
+  function goBack() {
+    if (screenHistory.length === 0) return;
+    const prev = screenHistory.pop();
+    const cur = document.getElementById('screen-' + currentScreen);
+    const prevEl = document.getElementById('screen-' + prev);
+
+    cur.classList.remove('active');
+    prevEl.classList.add('active');
+    currentScreen = prev;
+  }
+
+  function toggleNotifications() {
+    const overlay = document.getElementById('overlay-notifications');
+    if(overlay) overlay.classList.toggle('visible');
+  }
+
+  // Dashboard specific scripts
+  function setPeriod(btn) {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.seg').forEach(s => {
+      s.addEventListener('click', () => { 
+        document.querySelectorAll('.seg').forEach(x => x.classList.remove('active')); 
+        s.classList.add('active'); 
+      });
+    });
+
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => { 
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); 
+        t.classList.add('active'); 
+      });
+    });
+  });
+
+  // Language Dictionary
+  const translations = {
+    en: {
+      role: "Priority Client", contact: "Contact", tabDash: "Dashboard", tabDocs: "My documents", tabEvents: "Events & Insights",
+      totalBal: "Total balance with Nomura", sinceLastWeek: "since last week", totalNW: "Total net worth", assets: "Assets", liab: "Liabilities",
+      cash: "Cash accounts", invest: "Investment portfolios", alt: "Alternatives assets", realEstate: "Real Estate", other: "Other assets",
+      payments: "Payments", addAcc: "Add new account", vot: "Value over time", today: "Today", picksTitle: "Nomura's pick for you", viewAll: "View all",
+      pe: "Private Equity", hf: "Hedge Fund", infra: "Infrastructure", targetIrr: "Target Net IRR", fundSize: "Fund Size", minInv: "Min. Investment",
+      lockup: "Lock-up", targetRet: "Target Return", aum: "AUM", liquidity: "Liquidity", exprInt: "Express Interest", topPort: "Top portfolios by",
+      mktVal: "Market value", advisory: "Advisory", disc: "Discretionary", eventsTitle: "Events & Insights", regInt: "Register interest", viewPros: "View prospectus",
+      tabWealth: "Wealth", tabDiscover: "Discover", tabBanking: "Banking"
+    },
+    zh: {
+      role: "尊贵客户", contact: "联系", tabDash: "仪表板", tabDocs: "我的文件", tabEvents: "活动与洞察",
+      totalBal: "野村总余额", sinceLastWeek: "自上周以来", totalNW: "总净值", assets: "资产", liab: "负债",
+      cash: "现金账户", invest: "投资组合", alt: "另类资产", realEstate: "房地产", other: "其他资产",
+      payments: "付款", addAcc: "添加新账户", vot: "随时间变化的价值", today: "今天", picksTitle: "野村为您精选", viewAll: "查看全部",
+      pe: "私募股权", hf: "对冲基金", infra: "基础设施", targetIrr: "目标净内部收益率", fundSize: "基金规模", minInv: "最低投资",
+      lockup: "锁定期", targetRet: "目标回报", aum: "资产管理规模", liquidity: "流动性", exprInt: "表达意向", topPort: "顶级投资组合 按",
+      mktVal: "市值", advisory: "咨询", disc: "全权委托", eventsTitle: "活动与洞察", regInt: "注册意向", viewPros: "查看招股说明书",
+      tabWealth: "财富", tabDiscover: "发现", tabBanking: "银行"
+    },
+    ja: {
+      role: "優先クライアント", contact: "連絡先", tabDash: "ダッシュボード", tabDocs: "マイドキュメント", tabEvents: "イベントとインサイト",
+      totalBal: "野村での総残高", sinceLastWeek: "先週から", totalNW: "純資産総額", assets: "資産", liab: "負債",
+      cash: "現金口座", invest: "投資ポートフォリオ", alt: "代替資産", realEstate: "不動産", other: "その他の資産",
+      payments: "支払い", addAcc: "新しい口座を追加", vot: "時間経過に伴う価値", today: "今日", picksTitle: "野村の厳選", viewAll: "すべて見る",
+      pe: "プライベート・エクイティ", hf: "ヘッジファンド", infra: "インフラ", targetIrr: "目標純IRR", fundSize: "ファンド規模", minInv: "最低投資額",
+      lockup: "ロックアップ", targetRet: "目標リターン", aum: "運用資産残高", liquidity: "流動性", exprInt: "関心を示す", topPort: "トップポートフォリオ別",
+      mktVal: "市場価値", advisory: "アドバイザリー", disc: "一任勘定", eventsTitle: "イベントとインサイト", regInt: "関心を登録", viewPros: "目論見書を見る",
+      tabWealth: "ウェルス", tabDiscover: "発見", tabBanking: "バンキング"
+    }
+  };
+
+  // Language Switching function
+  function changeDashLanguage(lang) {
+    const dict = translations[lang];
+    if(!dict) return;
+    
+    // Find every element in the home screen that has a data-i18n tag
+    const elements = document.querySelectorAll('#screen-home [data-i18n]');
+    elements.forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if(dict[key]) {
+        el.innerText = dict[key];
+      }
+    });
+  }
+
+</script>
+</body>
+</html>
