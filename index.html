@@ -1097,7 +1097,77 @@
       }
     });
   }
+// --- Customization Features ---
 
+// 1. Dynamic Theme Color
+const colorPicker = document.getElementById('theme-color-picker');
+
+colorPicker.addEventListener('input', (e) => {
+  const newColor = e.target.value;
+  
+  // Helper to darken colors for gradients and backgrounds
+  const darkenColor = (hex, amount) => {
+    let color = hex.replace('#', '');
+    if (color.length === 3) color = color.split('').map(c => c + c).join('');
+    const num = parseInt(color, 16);
+    let r = (num >> 16) - amount;
+    let b = ((num >> 8) & 0x00FF) - amount;
+    let g = (num & 0x0000FF) - amount;
+    r = Math.max(Math.min(255, r), 0);
+    b = Math.max(Math.min(255, b), 0);
+    g = Math.max(Math.min(255, g), 0);
+    return `#${(g | (b << 8) | (r << 16)).toString(16).padStart(6, '0')}`;
+  };
+
+  const deepColor = darkenColor(newColor, 50);
+  const midColor = darkenColor(newColor, 20);
+
+  // Update primary CSS variables
+  const root = document.documentElement;
+  root.style.setProperty('--nomura-red', newColor);
+  root.style.setProperty('--red', newColor);
+  root.style.setProperty('--nomura-bright', newColor);
+  root.style.setProperty('--nomura-deep', deepColor);
+  root.style.setProperty('--red-dark', deepColor);
+  root.style.setProperty('--nomura-mid', midColor);
+  
+  // Note: The prototype uses hardcoded hex colors (#D81032) inside some inline SVGs (like the bottom tab bar and charts). 
+  // To make those dynamic, we use a quick DOM manipulation to update their fills:
+  document.querySelectorAll('svg path[fill="#D81032"], svg path[fill="var(--nomura-red)"]').forEach(path => {
+    path.setAttribute('fill', newColor);
+  });
+  document.querySelectorAll('svg polygon[fill="#D81032"], svg rect[fill="#D81032"]').forEach(shape => {
+    shape.setAttribute('fill', newColor);
+  });
+});
+
+// 2. Custom Login Screen Image Upload
+const imageUpload = document.getElementById('login-image-upload');
+const loginLogo = document.querySelector('.nomura-logo-img');
+
+imageUpload.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    
+    reader.onload = function(event) {
+      // Replace the Nomura logo with the uploaded image
+      loginLogo.src = event.target.result;
+      
+      // Optional: If the user uploads a background image instead of a logo, you can uncomment the lines below 
+      // to set it as the background of the login header rather than replacing the logo:
+      
+      // const loginHeader = document.querySelector('.header');
+      // loginHeader.style.backgroundImage = `url(${event.target.result})`;
+      // loginHeader.style.backgroundSize = 'cover';
+      // loginHeader.style.backgroundPosition = 'center';
+      // loginLogo.style.display = 'none'; // Hide the logo if using a background image
+    };
+    
+    // Read the file as a Data URL to display it
+    reader.readAsDataURL(file);
+  }
+});
 </script>
 </body>
 </html>
