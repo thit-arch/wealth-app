@@ -401,6 +401,8 @@
                 <option value="en" style="color: black;">EN</option>
                 <option value="zh" style="color: black;">简</option>
                 <option value="ja" style="color: black;">日</option>
+               <option value="vi" style="color: black;">VI</option>
+               <option value="ms" style="color: black;">BM</option>
               </select>
               <div class="notif-wrap" onclick="toggleNotifications()">            
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.93 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>            
@@ -1056,6 +1058,7 @@
 
   // Language Dictionary
   const translations = {
+const translations = {
     en: {
       role: "Priority Client", contact: "Contact", tabDash: "Dashboard", tabDocs: "My documents", tabEvents: "Events & Insights",
       totalBal: "Total balance with Nomura", sinceLastWeek: "since last week", totalNW: "Total net worth", assets: "Assets", liab: "Liabilities",
@@ -1067,27 +1070,32 @@
       tabWealth: "Wealth", tabDiscover: "Discover", tabBanking: "Banking"
     },
     zh: {
-      role: "尊贵客户", contact: "联系", tabDash: "仪表板", tabDocs: "我的文件", tabEvents: "活动与洞察",
-      totalBal: "野村总余额", sinceLastWeek: "自上周以来", totalNW: "总净值", assets: "资产", liab: "负债",
-      cash: "现金账户", invest: "投资组合", alt: "另类资产", realEstate: "房地产", other: "其他资产",
-      payments: "付款", addAcc: "添加新账户", vot: "随时间变化的价值", today: "今天", picksTitle: "野村为您精选", viewAll: "查看全部",
-      pe: "私募股权", hf: "对冲基金", infra: "基础设施", targetIrr: "目标净内部收益率", fundSize: "基金规模", minInv: "最低投资",
-      lockup: "锁定期", targetRet: "目标回报", aum: "资产管理规模", liquidity: "流动性", exprInt: "表达意向", topPort: "顶级投资组合 按",
-      mktVal: "市值", advisory: "咨询", disc: "全权委托", eventsTitle: "活动与洞察", regInt: "注册意向", viewPros: "查看招股说明书",
-      tabWealth: "财富", tabDiscover: "发现", tabBanking: "银行"
+      // ... existing Chinese translations ...
     },
     ja: {
-      role: "優先クライアント", contact: "連絡先", tabDash: "ダッシュボード", tabDocs: "マイドキュメント", tabEvents: "イベントとインサイト",
-      totalBal: "野村での総残高", sinceLastWeek: "先週から", totalNW: "純資産総額", assets: "資産", liab: "負債",
-      cash: "現金口座", invest: "投資ポートフォリオ", alt: "代替資産", realEstate: "不動産", other: "その他の資産",
-      payments: "支払い", addAcc: "新しい口座を追加", vot: "時間経過に伴う価値", today: "今日", picksTitle: "野村の厳選", viewAll: "すべて見る",
-      pe: "プライベート・エクイティ", hf: "ヘッジファンド", infra: "インフラ", targetIrr: "目標純IRR", fundSize: "ファンド規模", minInv: "最低投資額",
-      lockup: "ロックアップ", targetRet: "目標リターン", aum: "運用資産残高", liquidity: "流動性", exprInt: "関心を示す", topPort: "トップポートフォリオ別",
-      mktVal: "市場価値", advisory: "アドバイザリー", disc: "一任勘定", eventsTitle: "イベントとインサイト", regInt: "関心を登録", viewPros: "目論見書を見る",
-      tabWealth: "ウェルス", tabDiscover: "発見", tabBanking: "バンキング"
+      // ... existing Japanese translations ...
+    },
+    vi: {
+      role: "Khách hàng Ưu tiên", contact: "Liên hệ", tabDash: "Bảng điều khiển", tabDocs: "Tài liệu", tabEvents: "Sự kiện & Thông tin",
+      totalBal: "Tổng số dư tại Nomura", sinceLastWeek: "kể từ tuần trước", totalNW: "Tổng giá trị tài sản ròng", assets: "Tài sản", liab: "Nợ phải trả",
+      cash: "Tài khoản tiền mặt", invest: "Danh mục đầu tư", alt: "Tài sản thay thế", realEstate: "Bất động sản", other: "Tài sản khác",
+      payments: "Thanh toán", addAcc: "Thêm tài khoản", vot: "Giá trị theo thời gian", today: "Hôm nay", picksTitle: "Lựa chọn của Nomura cho bạn", viewAll: "Xem tất cả",
+      pe: "Vốn cổ phần tư nhân", hf: "Quỹ phòng hộ", infra: "Cơ sở hạ tầng", targetIrr: "IRR ròng mục tiêu", fundSize: "Quy mô quỹ", minInv: "Đầu tư tối thiểu",
+      lockup: "Thời gian khóa", targetRet: "Lợi nhuận mục tiêu", aum: "AUM", liquidity: "Thanh khoản", exprInt: "Bày tỏ sự quan tâm", topPort: "Danh mục hàng đầu theo",
+      mktVal: "Giá trị thị trường", advisory: "Tư vấn", disc: "Ủy thác", eventsTitle: "Sự kiện & Thông tin", regInt: "Đăng ký quan tâm", viewPros: "Xem bản cáo bạch",
+      tabWealth: "Tài sản", tabDiscover: "Khám phá", tabBanking: "Ngân hàng"
+    },
+    ms: {
+      role: "Pelanggan Keutamaan", contact: "Hubungi", tabDash: "Papan Pemuka", tabDocs: "Dokumen saya", tabEvents: "Acara & Maklumat",
+      totalBal: "Jumlah baki dengan Nomura", sinceLastWeek: "sejak minggu lepas", totalNW: "Jumlah nilai bersih", assets: "Aset", liab: "Liabiliti",
+      cash: "Akaun tunai", invest: "Portfolio pelaburan", alt: "Aset alternatif", realEstate: "Hartanah", other: "Aset lain",
+      payments: "Pembayaran", addAcc: "Tambah akaun baharu", vot: "Nilai mengikut masa", today: "Hari ini", picksTitle: "Pilihan Nomura untuk anda", viewAll: "Lihat semua",
+      pe: "Ekuiti Persendirian", hf: "Dana Lindung Nilai", infra: "Infrastruktur", targetIrr: "Sasaran IRR Bersih", fundSize: "Saiz Dana", minInv: "Pelaburan Min.",
+      lockup: "Kunci masuk", targetRet: "Sasaran Pulangan", aum: "AUM", liquidity: "Kecairan", exprInt: "Nyatakan Minat", topPort: "Portfolio teratas mengikut",
+      mktVal: "Nilai pasaran", advisory: "Nasihat", disc: "Budi Bicara", eventsTitle: "Acara & Maklumat", regInt: "Daftar minat", viewPros: "Lihat prospektus",
+      tabWealth: "Kekayaan", tabDiscover: "Teroka", tabBanking: "Perbankan"
     }
   };
-
   // Language Switching function
   function changeDashLanguage(lang) {
     const dict = translations[lang];
