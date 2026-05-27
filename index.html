@@ -293,7 +293,12 @@
     <label>Features & Screens</label>
    <div class="sidebar-section" style="margin-top: 24px;">
   <label>Customization</label>
-  
+    
+  <div style="margin-bottom: 16px;">
+    <span style="font-size: 13px; color: #ccc; display: block; margin-bottom: 8px;">App Name</span>
+    <input type="text" id="app-name-input" placeholder="e.g. MyBank Wealth" style="width: 100%; height: 36px; border: 1px solid #444; border-radius: 8px; cursor: text; background: #111; color: #fff; padding: 8px; font-size: 14px; outline: none;">
+  </div>
+    
   <div style="margin-bottom: 16px;">
     <span style="font-size: 13px; color: #ccc; display: block; margin-bottom: 8px;">App Theme Color</span>
     <input type="color" id="theme-color-picker" value="#D81032" style="width: 100%; height: 36px; border: 1px solid #444; border-radius: 8px; cursor: pointer; background: #111; padding: 2px;">
@@ -1167,6 +1172,63 @@ imageUpload.addEventListener('change', (e) => {
     // Read the file as a Data URL to display it
     reader.readAsDataURL(file);
   }
+});
+   // --- Brand Name Replacement ---
+
+// 1. Create a copy of the original translations for i18n text
+const originalTranslations = JSON.parse(JSON.stringify(translations));
+
+// 2. Find and cache all static text nodes containing "Nomura"
+let textNodesWithBrand = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  const walker = document.createTreeWalker(
+    document.body, 
+    NodeFilter.SHOW_TEXT, 
+    null, 
+    false
+  );
+  
+  let node;
+  while (node = walker.nextNode()) {
+    // Check if the text node contains "Nomura" and isn't empty
+    if (node.nodeValue && node.nodeValue.includes('Nomura')) {
+      textNodesWithBrand.push({
+        node: node,
+        originalText: node.nodeValue
+      });
+    }
+  }
+});
+
+// 3. Listen to the Name input field
+const nameInput = document.getElementById('app-name-input');
+
+nameInput.addEventListener('input', (e) => {
+  // Use the input value, or default back to "Nomura" if the field is cleared
+  const newName = e.target.value.trim() !== '' ? e.target.value : 'Nomura';
+  
+  // Update static HTML text nodes
+  textNodesWithBrand.forEach(item => {
+    item.node.nodeValue = item.originalText.replace(/Nomura/g, newName);
+  });
+  
+  // Update the translation dictionaries (also checking for the Japanese/Chinese '野村')
+  Object.keys(originalTranslations).forEach(lang => {
+    Object.keys(originalTranslations[lang]).forEach(key => {
+      let originalText = originalTranslations[lang][key];
+      
+      if (originalText.includes('Nomura') || originalText.includes('野村')) {
+        translations[lang][key] = originalText
+          .replace(/Nomura/g, newName)
+          .replace(/野村/g, newName); // Replaces Asian characters if testing other languages
+      }
+    });
+  });
+  
+  // Re-trigger the dashboard translation function so visible tabs/dashboard data updates instantly
+  const currentLang = document.getElementById('dash-lang-select').value;
+  changeDashLanguage(currentLang);
 });
 </script>
 </body>
